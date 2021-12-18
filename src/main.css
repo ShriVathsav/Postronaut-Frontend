@@ -1,0 +1,22 @@
+.para{
+    margin: 40px;
+}
+
+::selection {
+    color: white;
+    background: #6435c9;
+}
+
+::-moz-selection{
+    color: white;
+    background: #6435c9;
+}
+
+a, a:link, a:hover, a:visited{
+    color: #6435c9;
+    font-weight: 700;
+}
+
+#body{
+    background-color: white;
+}
