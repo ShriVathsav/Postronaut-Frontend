@@ -66,11 +66,11 @@ export default {
             this[stateObj] = val !== "" ? (validateNumeric(val, min, max) ? val : this[stateObj]) : ""
             this.$refs[stateObj].value = this[stateObj]
         },
-        numericInputChange(e, stateObj, min, max){
+        /*numericInputChange(e, stateObj, min, max){
             const val = e.target.value
             this[stateObj] = val !== "" ? (validateNumeric(val, 1, 20) ? val : this[stateObj]) : ""
             this.$refs[stateObj].value = this[stateObj]
-        },
+        },*/
         textInputChange(e, stateObj){
             const val = e.target.value
             this[stateObj] = val !== "" ? removeSpacesFromTextInput(val) : ''

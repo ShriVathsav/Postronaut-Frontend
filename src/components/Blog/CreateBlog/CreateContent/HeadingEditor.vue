@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import {headingEditorConfig, conf} from "../TinyMceConfig.js"
+import {headingEditorConfig} from "../TinyMceConfig.js"
 import PopUp from "./PopUp.vue"
 
 export default {
@@ -40,7 +40,7 @@ export default {
         }
     },
     mounted() {
-        tinymce.init(headingEditorConfig(this.editorId, this.getContentFromEditor, this.addBorderToEditor, this.items.content))
+        window.tinymce.init(headingEditorConfig(this.editorId, this.getContentFromEditor, this.addBorderToEditor, this.items.content))
         //tinymce.init(conf)
         console.log(this.editorId, "EDITOR ID")
     },

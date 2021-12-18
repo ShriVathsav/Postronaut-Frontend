@@ -111,21 +111,21 @@ export default {
             this[stateObj] = val !== "" ? (validateNumeric(val, min, max) ? val : this[stateObj]) : ""
             this.$refs[stateObj].value = this[stateObj]
         },
-        numericInputChange(e, stateObj, min, max){
+        /*numericInputChange(e, stateObj, min, max){
             const val = e.target.value
             this[stateObj] = val !== "" ? (validateNumeric(val, 1, 20) ? val : this[stateObj]) : ""
             this.$refs[stateObj].value = this[stateObj]
-        },
+        },*/
         textInputChange(e, stateObj){
             const val = e.target.value
             this[stateObj] = val !== "" ? removeSpacesFromTextInput(val) : ''
             this.$refs[stateObj].value = this[stateObj]
         },
-        prepareFirstContent(item){
+        prepareFirstContent(){
             const imageStyle = `width: ${this.imageWidth}px; border: ${this.borderWidth}px ${this.borderStyle} ${this.borderColor}; padding: ${this.spaceAround}px; max-width: 100%;`
             return `<img alt='${this.alternativeText}' style='${imageStyle}' src='`
         },
-        prepareThirdContent(item){
+        prepareThirdContent(){
             const captionStyle = "padding: 9px; line-height: 1.4; color: rgba(0,0,0,.68);"
             return this.showCaptions ? `' /><figcaption style='${captionStyle}' >${this.captions}</figcaption>` : " />"
         },

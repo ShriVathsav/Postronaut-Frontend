@@ -64,7 +64,7 @@ export default {
     },
     mounted() {
         console.log("TITLE EDITOR MOUNTING")
-        tinymce.init(blockquoteEditorConfig(this.quoteId, this.getContentFromEditor, 
+        window.tinymce.init(blockquoteEditorConfig(this.quoteId, this.getContentFromEditor, 
                 this.addBorderToEditor, this.items.content))
     },
     updated(){
