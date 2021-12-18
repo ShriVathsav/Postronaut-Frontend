@@ -12,9 +12,9 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "starts": "node server.js",
+    "start": "node server.js",
     "postinstall": "npm run build",
-    "start": "npm run serve"
+    "starts": "npm run serve"
   },
   "dependencies": {
     "aws-sdk": "^2.1046.0",
