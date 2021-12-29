@@ -7,8 +7,8 @@
                         <div style="display: flex; align-items: center; justify-content: center; cursor: pointer;">
                             <SuiImage :src="mainIcon" size="mini" style="margin-right: 16px;"/>
                             <div style="display: flex; flex-direction: column; color: white;">
-                                <span style="font-size: 28px; font-weight: 700;">Pencil</span>
-                                <span style="font-size: 12px;">The Blog App</span>
+                                <span style="font-size: 28px; font-weight: 700;">Postronaut</span>
+                                <span style="font-size: 12px;">Launch your posts!</span>
                             </div>
                         </div>
                     </router-link>
@@ -17,7 +17,7 @@
                     Made with <SuiIcon color="red" name="heart" /> by Shrivaathsav S
                 </div>
                 <div class="footer-info">
-                    Copyrights <SuiIcon color="violet" name="copyright" />2021 Pencil - The Blog App. All Rights are Reserved.
+                    Copyrights <SuiIcon color="violet" name="copyright" />{{new Date().getFullYear()}} - Postronaut. All Rights are Reserved.
                 </div>
             </div>
         </SuiContainer>
@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import mainIcon from "../../static/Icons/pencil.svg"
+import mainIcon from "../../static/Icons/mainIcon.svg"
 
 export default {
     name: "Footer",
@@ -46,7 +46,7 @@ export default {
     border-radius: 0px;
     padding: 25px;
     width: 100%;
-    margin-top: 20px;
+    margin-top: 30px;
 
 }
 

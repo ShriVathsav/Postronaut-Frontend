@@ -15,7 +15,7 @@
                     <div :style="step === 2 ? '' : 'display: none;'">
                         <PublishBlog :blogSubmitHandler="uploadImagesAndSubmit" :alterStep="alterStep" :coverPicUrl="coverPicUrl"
                             :initialTopicList="initialTopicList" :blog="blog" :blogEditState="editBlogEnum.UPDATE" 
-                            :deleteCoverPicUrl="deleteCoverPicUrl" />
+                            :deleteCoverPicUrl="deleteCoverPicUrl" :publishLoading="publishLoading" />
                     </div>
                     <div :style="step === 3 ? '' : 'display: none;'">
                         <InfoPage message="Post has been updated successfully" :icon="blogSuccessIcon" />
@@ -78,6 +78,7 @@ export default {
             step: 1,
             editBlogEnum,
             loading: true,
+            publishLoading: false,
             blogNotFound: false,
 
             blogSuccessIcon
@@ -175,16 +176,19 @@ export default {
             console.log(uploadedImagesCopy, 'OUTPUT FROM PREPARE IMAGES LIST')
             return uploadedImagesCopy
         },
-        async uploadImagesAndSubmit(selectedTopicList, coverPhoto) {
-            console.log("UPLOADING IMAGE", this.imageBlobList)
-            for (const [fileName, file] of Object.entries(this.imageBlobList)) {
-                console.log(file, fileName)
-                await this.uploadToS3(file, fileName)
-                console.log(this.uploadedObjectKeysArray, fileName, "UPLOADED OBJECT KEYS ARRAY WHILE ITERATING")
-            }    
-            const imagesList = [...Object.keys(this.prepareImagesList()), ...this.uploadedObjectKeysArray]
-            console.log(imagesList, "FINAL IMAGES LIST")
-            this.submitAgainHandler(selectedTopicList, coverPhoto, imagesList)
+        async uploadImagesAndSubmit(selectedTopicList, coverPhoto, blogStatus) {
+            if(selectedTopicList.length !== 0){
+                this.publishLoading = true
+                console.log("UPLOADING IMAGE", this.imageBlobList)
+                for (const [fileName, file] of Object.entries(this.imageBlobList)) {
+                    console.log(file, fileName)
+                    await this.uploadToS3(file, fileName)
+                    console.log(this.uploadedObjectKeysArray, fileName, "UPLOADED OBJECT KEYS ARRAY WHILE ITERATING")
+                }    
+                const imagesList = [...Object.keys(this.prepareImagesList()), ...this.uploadedObjectKeysArray]
+                console.log(imagesList, "FINAL IMAGES LIST")
+                this.submitAgainHandler(selectedTopicList, coverPhoto, imagesList, blogStatus)
+            }
         },
         deleteCoverPicUrl(obj) {
             console.log(obj)
@@ -224,40 +228,43 @@ export default {
             }
             return combinedStr
         },
-        submitAgainHandler(selectedTopicList, coverPhoto, imagesList){
-            if(selectedTopicList.length === 0){
-                const jsd = JSON.stringify(this.blogObjectList)
-                //console.log(jsd, typeof jsd)
-                const jst = JSON.parse(jsd)
-                console.log(typeof jst)
-                console.log(imagesList, "IMAGES LIST FINAL")
-                const requ = {
-                    blog: {
-                        blogTitle: this.blogObjectList[0].content,
-                        blogContent: jsd,
-                        textContent: this.prepareSearchableTextContent(),
-                        coverPicUrl: this.coverPicUrl,
-                        blogStatus: "published",
-                        imagesList: JSON.stringify(imagesList),
-                        updatedAt: new Date()
-                    },
-                    topicList: selectedTopicList
-                }
-
-                let data = new FormData()
-                data.append('blogString', JSON.stringify(requ))
-                data.append('coverPhoto', coverPhoto)
-
-                axios.put(`/blog/${this.blog.id}`, data).then(res => {
-                    console.log(res)
-                    this.step = 3
-                    this.blogObjectList = []
-                    this.coverPicUrl = null
-                    this.initialTopicList = []
-                }).catch(err => {
-                    console.log(err.response, err)
-                })
+        submitAgainHandler(selectedTopicList, coverPhoto, imagesList, blogStatus){
+            console.log("SIBMITTING 2", selectedTopicList.length)
+        
+            const jsd = JSON.stringify(this.blogObjectList)
+            //console.log(jsd, typeof jsd)
+            const jst = JSON.parse(jsd)
+            console.log(typeof jst)
+            console.log(imagesList, "IMAGES LIST FINAL")
+            const requ = {
+                blog: {
+                    blogTitle: this.blogObjectList[0].content,
+                    blogContent: jsd,
+                    textContent: this.prepareSearchableTextContent(),
+                    coverPicUrl: this.coverPicUrl,
+                    blogStatus,
+                    imagesList: JSON.stringify(imagesList),
+                    updatedAt: new Date()
+                },
+                topicList: selectedTopicList
             }
+
+            let data = new FormData()
+            data.append('blogString', JSON.stringify(requ))
+            data.append('coverPhoto', coverPhoto)
+
+            console.log("SUBMITTING")
+            axios.put(`/blog/${this.blog.id}`, data).then(res => {
+                console.log(res)
+                this.step = 3
+                this.blogObjectList = []
+                this.coverPicUrl = null
+                this.initialTopicList = []
+                this.publishLoading = false
+            }).catch(err => {
+                this.publishLoading = false
+                console.log(err.response, err)
+            })
         },
         alterStep(val){
             this.step = val
@@ -269,9 +276,6 @@ export default {
             secretAccessKey: process.env.VUE_APP_SECRET_ACCESS_KEY
         })
     },
-    updated(){
-        console.log(this.uploadedImages, this.deletedImages, "PRINTING WHILE DELETING IMAGE 2")
-    }
 }
 </script>
 

@@ -16,7 +16,7 @@ export const auth = {
                     return Promise.resolve(user);
                 },
                 error => {
-                    console.log("ERROR FROM VUEX MODILE")
+                    console.log(error, "ERROR FROM VUEX MODILE")
                     commit('loginFailure');
                     return Promise.reject(error);
                 }

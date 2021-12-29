@@ -11,10 +11,10 @@
                         </div>
                         <router-link to="/">
                             <div style="display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                <SuiImage :src="mainIcon" size="mini" style="margin-right: 16px;"/>
+                                <SuiImage :src="mainIcon2" size="mini" style="margin-right: 16px;"/>
                                 <div style="display: flex; flex-direction: column; color: white;">
-                                    <span style="font-size: 28px; font-weight: 700;">Pencil</span>
-                                    <span style="font-size: 12px;">The Blog App</span>
+                                    <span style="font-size: 28px; font-weight: 700;">Postronaut</span>
+                                    <span style="font-size: 12px;">Launch your posts!</span>                                   
                                 </div>
                             </div>
                         </router-link>
@@ -59,12 +59,13 @@
 
 <script>
 import hamburgerMenu from "../../static/Icons/list2.svg"
-import mainIcon from "../../static/Icons/pencil.svg"
+import mainIcon from "../../static/Icons/mainIcon.svg"
 import loginIcon from "../../static/Icons/AuthIcons/loginIconAlt.svg"
 import registerIcon from "../../static/Icons/AuthIcons/registerIcon.svg"
 import avatarIcon from "../../static/Icons/ProfileIcons/unknownUser3.svg"
 import noBlogsIcon from "../../static/Icons/AuthIcons/createPostIcon.svg"
 import signOutIcon from "../../static/Icons/AuthIcons/signOutIcon.svg"
+import mainIcon2 from "../../static/Icons/mainIcon.svg"
 
 import SideDrawer from "./SideDrawer.vue"
 
@@ -73,6 +74,7 @@ export default {
     components: {SideDrawer},
     data(){
         return {
+            mainIcon2,
             hamburgerMenu,
             mainIcon,
             loginIcon,
@@ -101,9 +103,6 @@ export default {
             })
         }
     },
-    updated(){
-        console.log(this.$store.state.auth.user.profilePicUrl, "PROFILE PIC URL GLOBAL")
-    }
 }
 </script>
 
@@ -114,7 +113,7 @@ export default {
     position: fixed;
     top: 0;
     width: 100%;
-    z-index: 99;    
+    z-index: 100;    
 }
 
 #menu {

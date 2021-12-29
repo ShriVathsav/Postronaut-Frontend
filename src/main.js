@@ -21,7 +21,8 @@ Vue.use(SuiVue)
 
 Vue.config.productionTip = false
 
-axios.defaults.baseURL = 'https://postronaut-backend.herokuapp.com/';
+//axios.defaults.baseURL = 'https://postronaut-backend.herokuapp.com/';
+axios.defaults.baseURL = 'http://localhost:5000';
 /*
 const tokenPresence = () => {
   //console.log(store)

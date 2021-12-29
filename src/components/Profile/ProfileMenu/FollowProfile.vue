@@ -1,7 +1,7 @@
 <template>
     <div style="display: flex; align-items: center;" >
         <div style="display: flex; align-items: center;" class="follow-image">
-            <SuiImage :src="item.to.profilePicUrl || avatarIcon" circular bordered
+            <SuiImage :src="avatarIcon" circular bordered
                 style="width: 50px; height: 50px; margin-right: 14px;"/>            
             <div>
                 <div style="font-weight: 700; margin-bottom: 5px; cursor: pointer;"

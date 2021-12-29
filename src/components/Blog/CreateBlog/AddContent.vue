@@ -23,10 +23,10 @@
                     <SuiImage :src="blockquote" id="content-image" />
                     <div id="content-sub-text">Blockquote</div>
                 </div>
-                <div id="content-item" @click="blogObjectList.push(addBlockquoteContent())">
+                <!--div id="content-item" @click="blogObjectList.push(addBlockquoteContent())">
                     <SuiImage :src="addCode" id="content-image" />
                     <div id="content-sub-text">Code</div>
-                </div>
+                </div-->
             </div>
         </SuiSegment>
     </div>

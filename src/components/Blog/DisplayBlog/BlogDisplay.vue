@@ -11,7 +11,7 @@
                             <div style="display: flex; justify-content: center; align-items: center;">
                                 <div style="width: 70%; font-size: 16px; display: flex; align-items: center; flex-flow: row wrap;">
                                     <div style="font-weight: 700; margin: 4px 8px; display: flex; align-items: center;">
-                                        <SuiImage style="margin-right: 12px;" :src="$store.state.auth.user.profilePicUrl || unknownUser" avatar />
+                                        <SuiImage style="margin-right: 12px;" :src="unknownUser" avatar />
                                         <SuiPopup content="View Profile" inverted position="top center" >
                                             <div slot="trigger" style="cursor: pointer;" @click="$router.push(`/profile/${author.id}`)">
                                                 {{author.userName}}

@@ -7,8 +7,8 @@
                         <SuiImage :src="mainIcon"
                             style="margin: 0px 0px 14px 0px; width: 60px;" />
                         <div style="display: flex; flex-direction: column;">
-                            <span style="font-size: 28px; font-weight: 700;">Pencil</span>
-                            <span style="font-size: 12px;">The Blog App</span>
+                            <span style="font-size: 28px; font-weight: 700;">Postronaut</span>
+                            <span style="font-size: 12px; text-align: center;">Launch your posts!</span>
                         </div>
                     </div>
 
@@ -73,7 +73,7 @@
 <script>
 import Backdrop from "./Backdrop.vue"
 
-import mainIcon from "../../static/Icons/pencil.svg"
+import mainIcon from "../../static/Icons/mainIcon.svg"
 import loginIcon from "../../static/Icons/AuthIcons/loginIconAlt.svg"
 import registerIcon from "../../static/Icons/AuthIcons/registerIcon.svg"
 import avatarIcon from "../../static/Icons/ProfileIcons/unknownUser3.svg"

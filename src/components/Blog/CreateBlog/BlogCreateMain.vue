@@ -8,7 +8,7 @@
     </div>
     <div :style="step === 2 ? '' : 'display: none;'">
         <PublishBlog :blogSubmitHandler="uploadImagesAndSubmit" :alterStep="alterStep" :deleteCoverPicUrl="deleteCoverPicUrl"
-            :initialTopicList="[]" :blogEditState="editBlogEnum.CREATE" :blog="{}" />
+            :initialTopicList="[]" :blogEditState="editBlogEnum.CREATE" :blog="{}" :publishLoading="publishLoading" />
     </div>
     <div :style="step === 3 ? '' : 'display: none;'">
         <InfoPage message="Post has been created successfully" :icon="blogSuccessIcon" />
@@ -54,6 +54,7 @@ export default {
             uploadedObjectKeysArray: [],
             step: 1,
             editBlogEnum,
+            publishLoading: false,
 
             blogSuccessIcon
         }
@@ -82,16 +83,19 @@ export default {
             //return objectKeysArray
             //let imagesList = this.uploadImageToS3()
         },
-        async uploadImagesAndSubmit(selectedTopicList, coverPhoto) {
-            console.log("UPLOADING IMAGE", this.imageBlobList)
-            for (const [fileName, file] of Object.entries(this.imageBlobList)) {
-                console.log(file, fileName)
-                await this.uploadToS3(file, fileName)
-                console.log(this.uploadedObjectKeysArray, fileName, "UPLOADED OBJECT KEYS ARRAY WHILE ITERATING")
-            }    
-            const imagesList = [...this.uploadedObjectKeysArray]
-            console.log(imagesList, "FINAL IMAGES LIST")
-            this.submitAgainHandler(selectedTopicList, coverPhoto, imagesList)
+        async uploadImagesAndSubmit(selectedTopicList, coverPhoto, blogStatus) {
+            if(selectedTopicList.length !== 0){
+                this.publishLoading = true
+                console.log("UPLOADING IMAGE", this.imageBlobList)
+                for (const [fileName, file] of Object.entries(this.imageBlobList)) {
+                    console.log(file, fileName)
+                    await this.uploadToS3(file, fileName)
+                    console.log(this.uploadedObjectKeysArray, fileName, "UPLOADED OBJECT KEYS ARRAY WHILE ITERATING")
+                }    
+                const imagesList = [...this.uploadedObjectKeysArray]
+                console.log(imagesList, "FINAL IMAGES LIST")
+                this.submitAgainHandler(selectedTopicList, coverPhoto, imagesList, blogStatus)
+            }
         },
         prepareSearchableTextContent(){
             let combinedStr = ""
@@ -102,45 +106,45 @@ export default {
             }
             return combinedStr
         },
-        submitAgainHandler(selectedTopicList, coverPhoto, imagesList){
-            console.log(imagesList, 'IMAGWES LIST')
-            if(selectedTopicList.length !== 0){
-                const jsd = JSON.stringify(this.blogObjectList)
-                //console.log(jsd, typeof jsd)
-                const jst = JSON.parse(jsd)
-                console.log(typeof jst)
-                const requ = {
-                    blog: {
-                        blogTitle: this.blogObjectList[0].content,
-                        blogContent: jsd,
-                        textContent: this.prepareSearchableTextContent(),
-                        blogStatus: "saved",
-                        imagesList: JSON.stringify(imagesList),
-                        createdAt: new Date(),
-                        updatedAt: new Date()
-                    },
-                    topicList: selectedTopicList,
-                    //coverPhoto
-                }
-
-                let data = new FormData()
-                data.append('blogString', JSON.stringify(requ))
-                data.append('coverPhoto', coverPhoto)
-
-                /*for(const i of data.entries()){
-                    console.log(i[0], i[1], "form data value")
-                }*/
-
-                console.log(coverPhoto, "COVER PHOTO FROM CREATE BLOG MAIN")
-                axios.post(`/blog/create/${this.profileId}`, data).then(res => {
-                    console.log(res)
-                    this.step = 3
-                    this.blogObjectList = []
-                    this.coverPicUrl = null
-                }).catch(err => {
-                    console.log(err.response, err)
-                })
+        submitAgainHandler(selectedTopicList, coverPhoto, imagesList, blogStatus){
+            console.log(imagesList, blogStatus, 'IMAGWES LIST')            
+            const jsd = JSON.stringify(this.blogObjectList)
+            //console.log(jsd, typeof jsd)
+            const jst = JSON.parse(jsd)
+            console.log(typeof jst)
+            const requ = {
+                blog: {
+                    blogTitle: this.blogObjectList[0].content,
+                    blogContent: jsd,
+                    textContent: this.prepareSearchableTextContent(),
+                    blogStatus,
+                    imagesList: JSON.stringify(imagesList),
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                },
+                topicList: selectedTopicList,
+                //coverPhoto
             }
+
+            let data = new FormData()
+            data.append('blogString', JSON.stringify(requ))
+            data.append('coverPhoto', coverPhoto)
+
+            /*for(const i of data.entries()){
+                console.log(i[0], i[1], "form data value")
+            }*/
+
+            console.log(coverPhoto, "COVER PHOTO FROM CREATE BLOG MAIN")
+            axios.post(`/blog/create/${this.profileId}`, data).then(res => {
+                console.log(res)
+                this.step = 3
+                this.blogObjectList = []
+                this.coverPicUrl = null
+                this.publishLoading = false
+            }).catch(err => {
+                this.publishLoading = false
+                console.log(err.response, err)
+            })            
         },
         deleteCoverPicUrl(obj) {
             console.log(obj)

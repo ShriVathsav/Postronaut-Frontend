@@ -13,16 +13,15 @@
                         <SuiGridColumn :mobile="16" :tablet="6" :computer="6">
                             <div style="display: flex; align-items: center; flex-direction: column;">
                                 <div>
-                                    <div v-if="identity() === 2">
-                                        <SuiImage :src="profilePicUrl || avatarIcon" circular bordered
+                                    <div>
+                                        <SuiImage slot="trigger" @click.native="openProfileModal()" bordered
+                                            :src="profilePicUrl || avatarIcon" circular
                                             style="width: 150px; height: 150px; padding: 5px; cursor: pointer;" />
                                     </div>
-                                    <SuiPopup position="bottom center" hoverable v-else >
-                                        <SuiImage slot="trigger" @click.native="openProfileModal()" :src="profilePicUrl || avatarIcon" 
-                                            style="width: 150px; height: 150px; padding: 5px; cursor: pointer;" circular bordered />
+                                    <!--SuiPopup position="bottom center" hoverable v-else >
                                         <SuiButton @click.native="removeProfileImage" content="Remove Image" icon="camera" 
                                             :disabled="!this.profilePicUrl" color="red" />
-                                    </SuiPopup>
+                                    </SuiPopup-->
                                 </div>
                                 <SuiHeader style="margin: 5px 0px 0px 0px; font-size: 20px;">
                                     {{profile.userName}}
@@ -154,7 +153,7 @@
                 </SuiSegment>
                 <ProfileMenu :profile="profile" :items="items" />
                 <ProfileImageModal :profileModalOpen="profileModalOpen" :openProfileModal="openProfileModal"
-                    :profilePicUrl="profilePicUrl" :alterProfilePic="alterProfilePic" />
+                    :profilePicUrl="profilePicUrl" :alterProfilePic="alterProfilePic" :profile="profile" />
                 <AddTopicModal :topicModalOpen="topicModalOpen" :openTopicModal="openTopicModal" :profile="profile" />
             </div>
         </div>
@@ -169,6 +168,8 @@ import AddTopicModal from "./EditProfile/AddTopicModal"
 import PageNotFound from "../InfoPages/PageNotFound"
 import axios from "axios"
 import moment from "moment"
+import AWS from 'aws-sdk'
+require("dotenv").config()
 
 import avatarIcon from "../../static/Icons/ProfileIcons/unknownUser3.svg"
 
@@ -182,6 +183,13 @@ export default {
     components: {ProfileMenu, FullPageLoader, ProfileImageModal, AddTopicModal, PageNotFound},
     data(){
         return {
+            s3Bucket: process.env.VUE_APP_BUCKET_NAME,
+            region: process.env.VUE_APP_BUCKET_REGION,
+            myBucket: new AWS.S3({
+                params: { Bucket: process.env.VUE_APP_BUCKET_NAME},
+                signatureVersion: 'v4',
+                region: process.env.VUE_APP_BUCKET_REGION
+            }),
             profileId: this.$route.params.id,
             activity: [],
             items: [],
@@ -231,13 +239,51 @@ export default {
             this.items = [['Liked Posts', profile.likedPosts, 'red'], ['Posts Commented', profile.commentedPosts, 'blue'], 
                 ['Followers', profile.followerCount, 'teal'], ['Following', profile.followingCount, 'olive']]
         },
+        async generatePresignedUrl(key){
+            return new Promise((resolve,reject) => {
+                const myBucket = this.s3Bucket
+                const myKey = key
+                const signedUrlExpireSeconds = 86400
+                const params = {
+                    Bucket: myBucket,
+                    Key: myKey,
+                    Expires: signedUrlExpireSeconds
+                }
+                this.myBucket.getSignedUrl('getObject', params, (err, url) => {
+                    if (err) {
+                        console.log(err)
+                        reject(err)
+                    }
+                    resolve(url)
+                })
+            });
+        },
         identity(){
             return this.$store.state.auth.user.id == this.$route.params.id ? 1 : 2
         },
         alterProfilePic(imageUrl){
             this.profilePicUrl = imageUrl
         },
-        removeProfileImage(){            
+        getProfile() {
+            this.loading = true
+            axios.get(`/profile/${this.profileId}`).then(async res => {
+                this.profile = res.data
+                this.profilePicUrl = res.data.profilePicUrl ? await this.generatePresignedUrl(res.data.profilePicUrl): ""
+                this.setActivityItems(res.data)
+                console.log(res.data, "profile")
+                this.loading = false
+            }).catch(err => {
+                console.log(err, "ERROR")
+                this.loading = false
+            })
+            if(this.identity() === 2){
+                axios.get(`/follow/findFollow/${this.$store.state.auth.user.id}/${this.$route.params.id}`).then(res => {
+                    console.log(res.data, "FIND FOLLOW")
+                    this.followState = res.data
+                })
+            }
+        }
+        /*removeProfileImage(){            
             axios.delete(`/profile/deleteprofileimage?imageUrl=${this.profilePicUrl}&profileId=${this.profileId}`).then(res => {
                 console.log(res)
                 this.profilePicUrl = ""
@@ -247,7 +293,7 @@ export default {
                 this.$store.dispatch("auth/changeProfileImage", null)
                 console.log(err.response)
             })
-        }
+        }*/
     },
     computed: {
         formatDate(){
@@ -256,26 +302,16 @@ export default {
         }
     },
     created(){
-        this.loading = true
-        axios.get(`/profile/${this.profileId}`).then(res => {
-            this.profile = res.data
-            this.profilePicUrl = res.data.profilePicUrl
-            this.setActivityItems(res.data)
-            console.log(res.data, "profile")
-            this.loading = false
-        }).catch(err => {
-            console.log(err, "ERROR")
-            this.loading = false
-        })
-        if(this.identity() === 2){
-            axios.get(`/follow/findFollow/${this.$store.state.auth.user.id}/${this.$route.params.id}`).then(res => {
-                console.log(res.data, "FIND FOLLOW")
-                this.followState = res.data
-            })
-        }
+        this.getProfile()
     },
     updated(){
         console.log(this.$store.state.auth.user, "AUTH USER")
+    },
+    beforeCreate(){
+        AWS.config.update({
+            accessKeyId: process.env.VUE_APP_ACCESS_KEY,
+            secretAccessKey: process.env.VUE_APP_SECRET_ACCESS_KEY
+        })
     }
 }
 </script>

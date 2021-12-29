@@ -2,7 +2,7 @@
     <div>
         <SuiComment style="padding: 14px 0px;">
             <!--<SuiCommentAvatar src="https://react.semantic-ui.com/images/avatar/small/matt.jpg" />-->
-            <SuiCommentAvatar :src="comment.profile.profilePicUrl || avatarIcon" style="width: 35px; height: 35px;" />
+            <SuiCommentAvatar :src="avatarIcon" style="width: 35px; height: 35px;" />
             <SuiCommentContent>
                 <router-link is="sui-comment-author" :to="'/profile/' + comment.profile.id">
                     {{comment.profile.userName}}</router-link>

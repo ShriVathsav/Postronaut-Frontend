@@ -12,15 +12,17 @@
         <div>
             <div style="display: flex; justify-content: center;"  >
                 <SuiPopup content="Your Blog will be visible to everyone." inverted position="bottom left" >
-                    <SuiButton slot="trigger" compact inverted color="violet" @click.native="blogSubmitHandler(selectedTopicList, coverPicture, coverPicUrl)"
-                        style="display: flex; align-items: center; justify-content: center; margin: 30px 18px 30px 0px;" >
+                    <SuiButton slot="trigger" compact inverted color="violet" :loading="publishLoading"
+                            @click.native="blogSubmitHandler(selectedTopicList, coverPicture, 'published')"
+                            style="display: flex; align-items: center; justify-content: center; margin: 30px 18px 30px 0px;" >
                         <SuiImage :src="publishBlog" size="mini" style="margin-right: 16px;" />
                         <span style="font-size: 16px;">PUBLISH</span>
                     </SuiButton>
                 </SuiPopup>
                 <SuiPopup v-if="evaluateSave()" content="A copy of this blog will be saved and will not be visible to others." inverted position="bottom right" >
-                    <SuiButton slot="trigger" compact inverted color="blue" 
-                        style="display: flex; align-items: center; justify-content: center; margin: 30px 0px 30px 18px;" >
+                    <SuiButton slot="trigger" compact inverted color="blue" :loading="publishLoading"
+                            @click.native="blogSubmitHandler(selectedTopicList, coverPicture, 'saved')"
+                            style="display: flex; align-items: center; justify-content: center; margin: 30px 0px 30px 18px;" >
                         <SuiImage :src="saveBlog" size="mini" style="margin-right: 16px;" />
                         <span style="font-size: 16px;">SAVE</span>
                     </SuiButton>
@@ -46,27 +48,27 @@
                 </SuiFormField>
             </SuiForm>
         </div>
-        <div style="margin-top: 30px;">            
+        <!--div style="margin-top: 30px;">            
             <SuiHeader dividing>Cover Photo</SuiHeader>            
             <CoverPicUpload :addCoverPicture="addCoverPicture" :coverPicUrl="coverPicUrl"
                 :deleteCoverPicUrl="deleteCoverPicUrl" />
-        </div>
+        </div-->
     </div>
 </template>
 
 <script>
 import axios from "axios"
 import {editBlogEnum} from "../BlogModels/Enums"
-import CoverPicUpload from "./CoverPicUpload"
+//import CoverPicUpload from "./CoverPicUpload"
 
 import publishBlog from "../../../static/Icons/CreateBlogIcons/publishBlog.svg"
 import saveBlog from "../../../static/Icons/CreateBlogIcons/saveBlog.svg"
 
 export default {
     name: "PublishBlog",
-    components: {CoverPicUpload},
+    components: {},
     props: ["blogObjectList", "imagesList", "deletedImagesList", "coverPicUrl", "blogSubmitHandler", 
-        "initialTopicList", "alterStep", "blog", "blogEditState", "deleteCoverPicUrl"],
+        "initialTopicList", "alterStep", "blog", "blogEditState", "deleteCoverPicUrl", "publishLoading"],
     data(){
         return {
             topicList: [],
@@ -133,7 +135,7 @@ export default {
             return arr
         },
         clearTopics(){
-            this.selectedTopicList = null
+            this.selectedTopicList = []
         },
         topicListValid(){
             if(this.selectedTopicList){
@@ -162,5 +164,10 @@ export default {
 </script>
 
 <style scoped>
-
+#clear-topics{
+    cursor: pointer;
+}
+#clear-topics:hover{
+    text-decoration: underline;
+}
 </style>

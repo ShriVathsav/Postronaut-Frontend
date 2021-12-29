@@ -51,7 +51,7 @@ import {validateEmail, removeSpacesFromPasswordInput} from "../Utility/ValidateI
 
 import loginIcon from "../../static/Icons/AuthIcons/loginIcon.svg"
 import loginIconAlt from "../../static/Icons/AuthIcons/loginIconAlt.svg"
-import mainIcon from "../../static/Icons/pencil.svg"
+import mainIcon from "../../static/Icons/mainIcon.svg"
 import User from "../../models/User"
 import {setAxiosHeader} from "../Utility/Utility"
 

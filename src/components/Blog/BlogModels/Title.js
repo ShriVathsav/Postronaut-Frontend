@@ -6,7 +6,7 @@ class Title {
 
     id = "",
     type = blogContentEnum.TITLE,
-    content = "Edit Title of the Blog",
+    content = "Edit Title of your Post",
     firstContent = "<h1 style='font-size: 36px;'>",
     thirdContent = "</h1>"
 
@@ -16,7 +16,7 @@ class Title {
 
     constructor(
         id = uuidv4(),
-        content = "Edit Title of the Blog",
+        content = "Edit Title of your Post",
         textContent = "",
         firstContent = "<h1 style='font-size: 36px;'>",
         thirdContent = "</h1>"

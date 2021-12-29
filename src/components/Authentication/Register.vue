@@ -66,7 +66,7 @@ import {validateEmail, removeSpacesFromTextInput, removeSpacesFromPasswordInput}
 import User from "../../models/User"
 
 import registerIcon from "../../static/Icons/AuthIcons/registerIcon.svg"
-import mainIcon from "../../static/Icons/pencil.svg"
+import mainIcon from "../../static/Icons/mainIcon.svg"
 
 //const API_URL = 'http://localhost:5000/api/auth/'
 const REQUIRED_FIELD = "This field is mandatory"

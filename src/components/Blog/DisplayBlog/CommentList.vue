@@ -140,9 +140,6 @@ export default {
             this.loading = false
         })
     },
-    updated(){
-        console.log(this.commentList, "PRINTING COMMENT LIST")
-    }
 }
 </script>
 

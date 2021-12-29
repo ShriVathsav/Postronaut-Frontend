@@ -162,7 +162,7 @@ export default {
         updateProfile(e){
             e.preventDefault()
             const profile = {
-                description: this.description,              
+                description: this.description,
                 userName: this.username,
                 education: this.education,
                 work: this.work,

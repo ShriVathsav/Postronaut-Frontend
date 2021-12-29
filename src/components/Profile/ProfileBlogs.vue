@@ -15,12 +15,12 @@
                     <SuiMenu tabular>
                         <SuiMenuItem :active="selectedTab === 1" @click.native="selectedTab = 1" class="menu-tab" >
                             <div>BLOGS PUBLISHED</div>
-                            <SuiLabel color="blue">{{publishedBlogList.length}}</SuiLabel>
+                            <SuiLabel color="blue">{{publishedBlogTotal}}</SuiLabel>
                         </SuiMenuItem>
                         <SuiMenuItem :active="selectedTab === 2" v-if="identity() === 1"
                                 @click.native="selectedTab = 2" class="menu-tab">
                             <div>BLOGS SAVED</div>
-                            <SuiLabel color="red">22</SuiLabel>
+                            <SuiLabel color="red">{{savedBlogTotal}}</SuiLabel>
                         </SuiMenuItem>
                     </SuiMenu>
                 </div>
@@ -30,7 +30,7 @@
                     </div>
                     <div v-else>
                         <div v-if="publishedBlogList.length !== 0" >
-                            <BlogList :blogList="publishedBlogList" />
+                            <BlogList :blogList="publishedBlogList" :loadMore="getPublishedBlogs" />
                         </div>
                         <div v-else>
                             <SuiMessage style="padding: 22px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center;" >
@@ -51,7 +51,7 @@
                     </div>
                     <div v-else>
                         <div v-if="savedBlogList.length !== 0" >
-                            <BlogList :blogList="savedBlogList" />
+                            <BlogList :blogList="savedBlogList" :loadMore="getSavedBlogs" />
                         </div>
                         <div v-else>
                             <SuiMessage style="padding: 22px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center;" >
@@ -93,18 +93,53 @@ export default {
             profileId: this.$route.params.id,
             profile: null,
             publishedBlogLoading: false,
+            publishedBlogTotal: 0,
+            savedBlogTotal: 0,
             savedBlogLoading: false,
             profileNotFound: false,
             loading: true,
+            savedBlogsPageNumber: 0,
+            publishedBlogsPageNumber: 0,
 
             noBlogsIcon,
             loadingImage
         }
     },
     methods: {
-        getPublishedBlogs(){
+        onTabChange(tab){
+            this.selectedTab = tab
+            if(tab === 1){
+                this.publishedBlogLoading = true
+                this.getPublishedBlogs()
+            } else if (tab === 2){
+                this.savedBlogLoading = true
+                this.getSavedBlogs()
+            }
+        },
+        getPublishedBlogs(infiniteLoadingState){
+            axios.get(`/blog/byprofile/${this.$route.params.id}/published?page=${this.publishedBlogsPageNumber}&size=3`).then(res => {
+                console.log(res, infiniteLoadingState)
+                this.publishedBlogLoading = false
+                if(res.data.content.length !== 0){
+                    console.log(res.data.content.length)
+                    this.publishedBlogList.push(...res.data.content)
+                    infiniteLoadingState ? infiniteLoadingState.loaded() : null
+                    this.publishedBlogsPageNumber = this.publishedBlogsPageNumber + 1
+                    this.publishedBlogTotal = res.data.totalElements
+                }
+                else{
+                    console.log(infiniteLoadingState)
+                    infiniteLoadingState ? infiniteLoadingState.complete() : null
+                }
+                
+            }).catch(err => {
+                console.log(err, err.response)
+                this.publishedBlogLoading = false
+            })
+        },
+        getPublishedBlogs2(){
             this.publishedBlogLoading = true
-            axios.get(`/blog/byprofile/${this.$route.params.id}`).then(res => {
+            axios.get(`/blog/byprofile/${this.$route.params.id}/published`).then(res => {
                 console.log(res)
                 this.publishedBlogList = res.data.content
                 this.publishedBlogLoading = false                
@@ -113,8 +148,26 @@ export default {
                 this.publishedBlogLoading = false
             })
         },
-        getSavedBlogs(){
-
+        getSavedBlogs(infiniteLoadingState){
+            axios.get(`/blog/byprofile/${this.$route.params.id}/saved?page=${this.savedBlogsPageNumber}&size=3`).then(res => {
+                console.log(res, infiniteLoadingState)
+                this.savedBlogLoading = false
+                if(res.data.content.length !== 0){
+                    console.log(res.data.content.length)
+                    this.savedBlogList.push(...res.data.content)
+                    infiniteLoadingState ? infiniteLoadingState.loaded() : null
+                    this.savedBlogsPageNumber = this.savedBlogsPageNumber + 1
+                    this.savedBlogTotal = res.data.totalElements
+                }
+                else{
+                    console.log(infiniteLoadingState)
+                    infiniteLoadingState ? infiniteLoadingState.complete() : null
+                }
+                
+            }).catch(err => {
+                console.log(err, err.response)
+                this.savedBlogLoading = false
+            })
         },
         identity(){
             return this.$store.state.auth.user.id == this.$route.params.id ? 1 : 2
@@ -124,8 +177,10 @@ export default {
         selectedTab: function() {
             console.log("SELECTED TAB CHANMHEE")
             if(this.selectedTab === 1){
+                this.publishedBlogLoading = true
                 this.getPublishedBlogs()
             } else if(this.selectedTab === 2){
+                this.savedBlogLoading = true
                 this.getSavedBlogs()
             }
         }
@@ -147,6 +202,9 @@ export default {
         } else if(this.selectedTab === 2){
             this.getSavedBlogs()
         }
+    },
+    updated(){
+        console.log(this.savedBlogList, this.publishedBlogList, "PROFILE BLOGS UPDATED")
     }
 }
 </script>

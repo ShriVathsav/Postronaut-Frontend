@@ -44,7 +44,7 @@ export const titleTemplate = () => {
     return {
         index: "",
         type: "Title",
-        content: "Edit Title of the Blog",
+        content: "Edit Title of your Post",
         firstContent: "<h1 style='font-size: 36px;'>",
         thirdContent: "</h1>"
     }

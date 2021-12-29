@@ -9,38 +9,42 @@
                         <div style="display: flex; flex-direction: column; align-items: center;">
                             <SuiImage :src="profileImageUploadIcon" size="mini" style="margin-bottom: 5px;" />
                             <div style="font-weight: 700; font-size: 15px;">
-                                No Profile Image Uploaded
+                                No Profile Image
                             </div>
                         </div>
                     </SuiMessage>
-                    <div v-if="!!imageUrl && errorPresence !== 2" style="display: flex; flex-direction: column; align-items: center;">
+                    <div v-if="!!imageUrl && !uploadError" style="display: flex; flex-direction: column; align-items: center;">
                         <div style="border: 2px solid rgba(34,36,38,.15);  margin-bottom: 7px;">
                             <SuiImage :src="imageUrl" style="width: 180px; height: 180px; padding: 5px;" />
                         </div>
-                    </div>
-                    <SuiHeader dividing style="font-size: 16px;" >Add / Change Profile Image</SuiHeader>
-                    <div>
-                        <div id="uploader-div">
-                            <input type="file" ref="imageInput" id="uploader-input" accept="image/*" 
-                                @change="readURL($event.target.files)" />
-                            <SuiImage :src="uploadImageIcon" style="width: 45px;" />
-                            <span id="uploader-text">Drop your Image here</span>
+                        <div v-if="identity() === 1" >
+                            <SuiButton icon="trash alternate" negative @click.native="deleteProfileImage" 
+                                :loading="deleteLoading" style="margin-top: 10px; margin-bottom: 20px;" >Remove Profile Image</SuiButton>
                         </div>
                     </div>
-                    <div :class="'info-message ' + addMessageClass()" v-if="errorPresence !== -1" >
-                        <div v-if="errorPresence === 1">
-                            File Saved {{ image.name }}
+                    <div v-if="identity() === 1" >
+                        <SuiHeader dividing style="font-size: 16px;" >Add / Change Profile Image</SuiHeader>
+                        <div>
+                            <div id="uploader-div">
+                                <input type="file" ref="imageInput" id="uploader-input" accept="image/*"
+                                    @change="readURL($event.target.files)" />
+                                <SuiImage :src="uploadImageIcon" style="width: 45px;" />
+                                <span id="uploader-text">Drop your Image here</span>
+                            </div>
                         </div>
-                        <div v-if="errorPresence === 2" style="text-align: center;">
-                            Invalid File Uploaded. Please upload an Image.
+                        <div :class="'info-message error'" v-if="uploadError" >
+                            <div style="text-align: center;">
+                                {{errorMessage}}
+                            </div>
                         </div>
                     </div>
                 </SuiModalDescription>
             </SuiModalContent>
             <SuiModalActions>
-                <SuiButton icon="delete" negative @click.native="cancelUpload">Close</SuiButton>
-                <SuiButton :disabled="!image || !imageUrl" icon="upload" positive 
-                    :loading="loading" @click.native="uploadImage">Upload</SuiButton>
+                <SuiButton icon="delete" negative @click.native="cancelUpload" :disabled="loading" >
+                    Close</SuiButton>
+                <SuiButton :disabled="!image || !imageUrl" icon="upload" positive v-if="identity() === 1"
+                    :loading="loading" @click.native="updateProfileImage">Upload</SuiButton>
             </SuiModalActions>
         </SuiModal>
     </div>
@@ -48,20 +52,31 @@
 
 <script>
 import axios from "axios"
+import {v4 as uuidv4} from "uuid"
 import uploadImageIcon from "../../../static/Icons/ProfileIcons/imageUploadIcon.svg"
 import profileImageUploadIcon from "../../../static/Icons/ProfileIcons/profileImageUploadIcon.svg"
 import deleteIcon from "../../../static/Icons/delete.svg"
+import AWS from 'aws-sdk'
+require("dotenv").config()
 
 export default {
     name: "ProfileImageModal",
-    props: ["profileModalOpen", "openProfileModal", "profilePicUrl", "alterProfilePic"],
+    props: ["profileModalOpen", "openProfileModal", "profilePicUrl", "alterProfilePic", "profile"],
     data() {
         return {
+            s3Bucket: process.env.VUE_APP_BUCKET_NAME,
+            region: process.env.VUE_APP_BUCKET_REGION,
+            myBucket: new AWS.S3({
+                params: { Bucket: process.env.VUE_APP_BUCKET_NAME},
+                signatureVersion: 'v4',
+                region: process.env.VUE_APP_BUCKET_REGION
+            }),
             image: null,
             imageUrl: this.profilePicUrl,
-            errorPresence: -1,
-            uploadError: true,
+            errorMessage: "",
+            uploadError: false,
             loading: false,
+            deleteLoading: false,
 
             uploadImageIcon,
             profileImageUploadIcon,
@@ -69,32 +84,116 @@ export default {
         }
     },
     methods: {
-        readURL(files) {
-            if (files && files[0]) {
-                const that1 = this
-                this.imageUrl = URL.createObjectURL(files[0])
-                const img = new Image()
-                img.onload = function(e, that2=that1) {
-
-                    that2.errorPresence = 1
-                    that2.image = files[0]
-                    that2.imageUrl = URL.createObjectURL(files[0])
+        identity(){
+            return this.$store.state.auth.user.id == this.$route.params.id ? 1 : 2
+        },
+        async uploadImageToS3() {
+            const file = this.image
+            const objectKey = uuidv4() + " - " + file.name
+            const params = {                    
+                Body: file,
+                Bucket: this.s3Bucket,
+                Key: objectKey,
+                ContentType: file.type
+            }                
+            try{
+                await this.myBucket.putObject(params).promise()
+                console.log("UPLOADED")
+            } catch(err){
+                this.uploadError = true
+                this.errorMessage = "An error occured"
+                console.log(err, err.response)
+                return
+            }
+            return objectKey
+        },
+        generatePresignedUrl(key){
+            const myBucket = this.s3Bucket
+            const myKey = key
+            const signedUrlExpireSeconds = 86400
+            const params = {
+                Bucket: myBucket,
+                Key: myKey,
+                Expires: signedUrlExpireSeconds
+            }
+            this.myBucket.getSignedUrl('getObject', params, (err, url) => {
+                if (err) {
+                    console.log(err)
+                    return
                 }
-                img.onerror = function(e, that2=that1) {
-                    // doesn't exist or error loading
-                    console.log("doesnt support", that2)
-                    that2.errorPresence = 2
-                    that2.image = null
-                    that2.imageUrl = null
-                    that2.$refs.imageInput ? that2.$refs.imageInput.value = "" : null
-                };
-                img.src = this.imageUrl;
+                console.log(url)
+                this.alterProfilePic(url)
+                this.$store.dispatch("auth/changeProfileImage", url)
+            })
+        },
+        async updateProfileImage(){
+            this.loading = true
+            const url = await this.uploadImageToS3()
+            console.log(url, this.$route.params.id, this.profile, "GENERATED URL")
+            const profile = {...this.profile}
+            profile.profilePicUrl = url
+            axios.put(`/profile/${this.$route.params.id}`, profile).then(res => {
+                console.log(res, "IMAGE UPLOADED SUCCESSFIULLY")
+                this.generatePresignedUrl(res.data.profilePicUrl)
+                this.loading = false
+                this.openProfileModal()
+            }).catch(err => {
+                this.loading = false
+                this.uploadError = true
+                this.errorMessage = err.message
+                console.log(err, err.response)
+            })
+        },
+        deleteProfileImage(){
+            this.deleteLoading = true
+            const profile = {...this.profile}
+            profile.profilePicUrl = ""
+            axios.put(`/profile/${this.$route.params.id}`, profile).then(res => {
+                console.log(res, "IMAGE UPLOADED SUCCESSFIULLY")
+                this.deleteLoading = false
+                this.alterProfilePic("")
+                this.imageUrl = ""
+                this.$store.dispatch("auth/changeProfileImage", "")
+                this.openProfileModal()
+            }).catch(err => {
+                this.deleteLoading = false
+                this.uploadError = true
+                this.errorMessage = err.message
+                console.log(err, err.response)
+            })
+        },
+        readURL(files){
+            const file = files ? files[0] : null
+            if(file){
+                var reader = new FileReader()
+                reader.onload = () => {
+                    var img = new Image;
+                    img.onload = () => {
+                        console.log("IMAGHE ON LOAD")
+                        this.image = file
+                        this.imageUrl = URL.createObjectURL(file)
+                        this.uploadError = false
+                        this.errorMessage = ""
+                    }
+                    img.onerror = () => {
+                        // doesn't exist or error loading
+                        console.log("doesnt support")
+                        this.uploadError = true
+                        this.errorMessage = "Invalid File Uploaded"
+                        this.image = null
+                        this.imageUrl = null
+                        this.$refs.imageInput ? this.$refs.imageInput.value = "" : null
+                    };
+                    img.src = reader.result
+                }
+                reader.readAsDataURL(file);
             }
         },
         deleteImage(){
             this.image = null
             this.imageUrl = this.profilePicUrl
-            this.errorPresence = -1
+            this.uploadError = false
+            this.errorMessage = ""
             this.$refs.imageInput ? this.$refs.imageInput.value = "" : null
         },
         cancelUpload(){
@@ -118,21 +217,18 @@ export default {
                 this.openProfileModal()
             })
         },
-        addMessageClass(){
-            if(this.errorPresence === 1){
-                return "info"
-            } else if(this.errorPresence === 2){
-                return "error"
-            } else {
-                return ""
-            }
-        }
     },
     created(){
 
     },
     updated(){
         console.log(this.image)
+    },
+    beforeCreate(){
+        AWS.config.update({
+            accessKeyId: process.env.VUE_APP_ACCESS_KEY,
+            secretAccessKey: process.env.VUE_APP_SECRET_ACCESS_KEY
+        })
     }
 }
 </script>
